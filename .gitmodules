@@ -1,6 +1,0 @@
-[submodule "HLearn"]
-	path = HLearn
-	url = https://github.com/mikeizbicki/HLearn
-[submodule "subhask"]
-	path = subhask
-	url = https://github.com/mikeizbicki/subhask
