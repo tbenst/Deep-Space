@@ -29,6 +29,7 @@ executable deep-space-exe
                      , HLearn
                      , MonadRandom
                      , mtl
+                     , vector
   default-language:    Haskell2010
 
 test-suite deep-space-test

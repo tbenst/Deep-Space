@@ -21,7 +21,8 @@ import System.IO
 
 import SubHask
 import SubHask.Algebra.Metric
--- import SubHask.Algebra.Vector
+import SubHask.Algebra.Array
+import SubHask.Algebra.Vector
 import SubHask.Compatibility.ByteString
 -- import SubHask.Category.Trans.Derivative
 
@@ -42,8 +43,9 @@ import SubHask.Category
 import Control.Monad
 -- import Control.Monad.Trans.State
 import qualified Data.List as L
+import qualified Data.Vector as V
 import System.IO
-import HLearn.Data.SpaceTree.CoverTree
+import HLearn.Data.SpaceTree
 
 --------------------------------------------------------------------------------
 
@@ -53,15 +55,6 @@ import HLearn.Data.SpaceTree.CoverTree
 data BP = A | T | C | G |
     N | Y | S | K | M | W | R | B |
     D | H | V | U deriving (Show)
-
--- instance Enum BP where
---     {-# INLINE succ #-}
---     succ = P.succ
-
---     # INLINE toEnum #
---     toEnum i = if i < 0
---         then P.toEnum 0
---         else P.toEnum i
 
 type instance Logic BP = Bool
 
@@ -93,33 +86,29 @@ instance Eq_ BP where
 --         then P.toEnum 0
 --         else P.toEnum i
 
+intToBP :: Int -> BP
+intToBP 0 = A
+intToBP 1 = T
+intToBP 2 = C
+intToBP 3 = G
+
+bpToInt :: BP -> Int
+bpToInt A = 0
+bpToInt T = 1
+bpToInt C = 2
+bpToInt G = 3
+
 mapToBP :: RandomGen g => (Int, g) -> (BP, g) 
-mapToBP (x, ng) = (IntToBP x, ng)
-
-IntToBP :: Int -> BP
-IntToBP 0 = A
-IntToBP 1 = T
-IntToBP 2 = C
-IntToBP 3 = G
-
-BPToInt :: BP -> Int
-BPToInt A = 0
-BPToInt T = 1
-BPToInt C = 2
-BPToInt G = 3
-
-
--- mapFromBP :: (BP, BP) -> StdGen -> (BP, StdGen) 
--- mapFromBP x ng = randomR (fromEnum <$> x) ng
+mapToBP (x, ng) = (intToBP x, ng)
 
 instance Random BP where
     -- randomR r g = randomR r g
-    randomR r g = mapToBP $ randomR (BPtoInt P.<$> r) g
+    randomR (a,b) g = mapToBP $ randomR (bpToInt a, bpToInt b) g
 
     -- NOTE the 15 is hardwired and needs to match BP
     random g = mapToBP $ randomR (0,15) g
 
-data SeqData = SeqData [BP]
+data SeqData = SeqData V.Vector BP
     deriving (Show)
 
 randomSeq :: Int -> State StdGen [BP]
@@ -128,68 +117,15 @@ randomSeq n = Control.Monad.replicateM n randomBP
         -- only ATCG
         randomBP = state $ randomR (A,G)
 
--- getSequence :: Int -> StdGen -> ([BP], g)
--- getSequence i gen = (map (\x -> getBP x) randomInts,
---                      g)
---     where
---         randomInt g = randomR (0,3) g
---         randomInts 0 _ = 
---         randomInts n g = ri:(head $
---                              randomInts (n-1) newg)
---             where
---                 (ri, newg)= randomInt g
 
--- foldDice = Control.Monad.liftM foldl
-
-randomSeqs :: Int -> Int -> State StdGen [[BP]]
+randomSeqs :: Int -> Int -> State StdGen [SeqData]
 randomSeqs len size = Control.Monad.replicateM size (randomSeq len)
  
--- randomSeqs :: Int -> Int -> State (StdGen, [BP]) [BP]
--- randomSeqs 0 size = do
---     (_, bps) <- get
---     Control.Monad.return bps
- 
-
--- randomSeqs len size = do
---     (gen, bps) <- get
---     let (next, g) = runState (randomSeq len) g
---     put (g, next:bps)
---     randomSeqs (len-1) size
- 
-
--- rollDice = Control.Monad.liftM2 (,) rollDie rollDie
-
--- randomSequence :: Int -> Int -> [[BP]]
--- randomSequence gen i = [[x] | x <- [y] | y <- (rs i)]
---     where
---         getBP x = case x `mod` 4 of
---             0 -> A
---             1 -> T
---             2 -> C
---             3 -> G
---         rs :: [Int] -> [BP]
---         rs n =  map (\x -> getBP x) [1..n]
---         randomInts = P.take i (randoms gen)
 --------------------------------------------------------------------------------
 
 main = do
     -- putStrLn $ show (distance a b)
-    -- gen <- newStdGen
-    -- let randomSequence = randoms gen
-    -- gen <- newStdGen
-    -- let randomSequence = getSequence $ randoms gen
-    -- putStrLn $ show $ randomSequence 10
-    -- putStrLn $ show $ randomSequence 10
-    -- putStrLn $ show $ randomSequence 10
-    -- putStrLn $ show $ randomSequence 10
-    -- putStrLn $ show $ A == A
-    -- putStrLn $ show $ A == T
+
     g <- getStdGen
     let a = evalState (randomSeqs 5 10) g
-    -- let a = evalState (randomSeqs 5 10) (g,[])
-    -- let a = Control.Monad.fmap (rollDie g) [1..3]
     putStrLn $ show $  a
-    -- putStrLn $ show $ evalState rollDie (execState a)
-    -- putStrLn $ P.take 3 (randomSequence 10)
-    -- print . P.take 10 $ (randomRs ('a', 'c') g)
-    -- print . P.take 10 $ (randomRs ('a', 'z') g)
