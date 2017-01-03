@@ -6,15 +6,20 @@ resolver: lts-6.3
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
-- location:
+- extra-dep: true
+  location:
     git: https://github.com/mikeizbicki/subhask.git
     commit: f53fd8f465747681c88276c7dabe3646fbdf7d50
-- location:
+- extra-dep: true
+  location:
     git: https://github.com/mikeizbicki/HLearn.git
     commit: c6c0f5e7593be3867f20c56c79b998e7d7ded9fc
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps:
+  - gamma-0.9.0.2
+  - continued-fractions-0.9.1.1
+  - converge-0.1.0.1
 
 # Override default flag values for local packages and extra-deps
 flags: {}

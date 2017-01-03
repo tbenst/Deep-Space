@@ -21,9 +21,6 @@ RUN make install
 
 RUN apt-get update && apt-get install -y \
     git
-WORKDIR /src
-RUN git clone https://github.com/mikeizbicki/subhask
-RUN git clone https://github.com/mikeizbicki/HLearn.git
 # WORKDIR subhask
 
 # RUN stack test --bench
@@ -37,7 +34,7 @@ RUN git clone https://github.com/mikeizbicki/HLearn.git
 
 COPY deep-space /src
 WORKDIR /src/deep-space
-RUN stack --version
+RUN stack build
 
 # Add just the .cabal file to capture dependencies
 # COPY ./snap-example.cabal /opt/server/snap-example.cabal
