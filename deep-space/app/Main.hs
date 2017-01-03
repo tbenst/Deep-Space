@@ -1,5 +1,5 @@
 -- {-# LANGUAGE ScopedTypeVariables #-}
--- {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- {-# LANGUAGE DeriveDataTypeable #-}
 -- {-# LANGUAGE DataKinds #-}
 -- {-# LANGUAGE FlexibleInstances #-}
@@ -11,7 +11,7 @@
 -- # LANGUAGE StandaloneDeriving #
 -- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- {-# LANGUAGE TypeOperators #-}
--- {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- {-# LANGUAGE UndecidableInstances #-}
 -- {-# LANGUAGE ConstraintKinds #-}
 -- {-# LANGUAGE RebindableSyntax #-}
@@ -23,6 +23,7 @@ import SubHask
 import SubHask.Algebra.Metric
 import SubHask.Algebra.Array
 import SubHask.Algebra.Vector
+import Data.Vector.Unboxed
 import SubHask.Compatibility.ByteString
 -- import SubHask.Category.Trans.Derivative
 
@@ -47,18 +48,22 @@ import qualified Data.Vector as V
 import System.IO
 import HLearn.Data.SpaceTree
 
+import Data.Vector.Unboxed.Base (Unbox)
+import Data.Vector.Unboxed.Deriving
+
+
 --------------------------------------------------------------------------------
 
 
 -- instance Metric DNA
 
-data BP = A | T | C | G |
+data Bp = A | T | C | G |
     N | Y | S | K | M | W | R | B |
     D | H | V | U deriving (Show)
 
-type instance Logic BP = Bool
+type instance Logic Bp = Bool
 
-instance Eq_ BP where
+instance Eq_ Bp where
     A==A = True
     T==T = True
     C==C = True
@@ -77,7 +82,7 @@ instance Eq_ BP where
     V==x = x==V || x==G || x==C || x==A
     _==_ = False
 
--- instance Enum BP where
+-- instance Enum Bp where
 --     {-# INLINE succ #-}
 --     succ = P.succ
 
@@ -86,36 +91,41 @@ instance Eq_ BP where
 --         then P.toEnum 0
 --         else P.toEnum i
 
-intToBP :: Int -> BP
-intToBP 0 = A
-intToBP 1 = T
-intToBP 2 = C
-intToBP 3 = G
+intToBp :: Int8 -> Bp
+intToBp 0 = A
+intToBp 1 = T
+intToBp 2 = C
+intToBp 3 = G
 
-bpToInt :: BP -> Int
+bpToInt :: Bp -> Int8
 bpToInt A = 0
 bpToInt T = 1
 bpToInt C = 2
 bpToInt G = 3
 
-mapToBP :: RandomGen g => (Int, g) -> (BP, g) 
-mapToBP (x, ng) = (intToBP x, ng)
+mapToBp :: RandomGen g => (Int, g) -> (Bp, g) 
+mapToBp (x, ng) = (intToBp x, ng)
 
-instance Random BP where
+instance Random Bp where
     -- randomR r g = randomR r g
-    randomR (a,b) g = mapToBP $ randomR (bpToInt a, bpToInt b) g
+    randomR (a,b) g = mapToBp $ randomR (bpToInt a, bpToInt b) g
 
-    -- NOTE the 15 is hardwired and needs to match BP
-    random g = mapToBP $ randomR (0,15) g
+    -- NOTE the 15 is hardwired and needs to match Bp
+    random g = mapToBp $ randomR (0,15) g
 
-data SeqData = SeqData V.Vector BP
+derivingUnbox "Bp"
+  [t| Bp -> Int8 |]
+  bpToInt
+  intToBp
+
+data SeqData = SeqData BArray Bp
     deriving (Show)
 
-randomSeq :: Int -> State StdGen [BP]
-randomSeq n = Control.Monad.replicateM n randomBP
+randomSeq :: Int -> State StdGen SeqData
+randomSeq n = SubHask.liftM SubHask.Algebra.fromList $ Control.Monad.replicateM n randomBp
     where
         -- only ATCG
-        randomBP = state $ randomR (A,G)
+        randomBp = state $ randomR (A,G)
 
 
 randomSeqs :: Int -> Int -> State StdGen [SeqData]
