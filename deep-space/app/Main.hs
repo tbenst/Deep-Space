@@ -113,10 +113,10 @@ instance Random Bp where
     -- NOTE the 15 is hardwired and needs to match Bp
     random g = mapToBp $ randomR (0,15) g
 
-derivingUnbox "Bp"
-  [t| Bp -> Int8 |]
-  bpToInt
-  intToBp
+-- derivingUnbox "Bp"
+--   [t| Bp -> Int8 |]
+--   bpToInt
+--   intToBp
 
 data SeqData = SeqData BArray Bp
     deriving (Show)
